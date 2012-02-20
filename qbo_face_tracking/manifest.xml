@@ -4,8 +4,8 @@
      qbo_face_tracking
 
   </description>
-  <author>Arturo Bajuelos Castillo/arturo.bajuelos@thecorpora.com</author>
-  <license>BSD</license>
+  <author>Arturo Bajuelos Castillo/arturo@openqbo.org</author>
+  <license>GPLv2, LGPLv2.1</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/qbo_face_tracking</url>
    <depend package="roscpp"/>

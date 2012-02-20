@@ -4,8 +4,8 @@
      qbo_face_recognition
 
   </description>
-  <author>Arturo Bajuelos Castillo/arturo.bajuelos@thecorpora.com</author>
-  <license>BSD</license>
+  <author>Maintained by Arturo Bajuelos Castillo/arturo@openqbo.com</author>
+  <license>GPLv2, LGPLv2.1</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/qbo_face_recognition</url>
   <depend package="roscpp"/>
