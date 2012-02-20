@@ -1,0 +1,5 @@
+sensor_msgs/Image face
+---
+string name
+bool recognized
+

@@ -1,0 +1,23 @@
+<package>
+  <description brief="qbo_face_tracking">
+
+     qbo_face_tracking
+
+  </description>
+  <author>Arturo Bajuelos Castillo/arturo.bajuelos@thecorpora.com</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/qbo_face_tracking</url>
+   <depend package="roscpp"/>
+  <depend package="opencv2"/>
+  <depend package="cv_bridge"/>
+  <depend package="sensor_msgs"/>
+  <depend package="new_face_recognition"/>
+  <depend package="qbo_arduqbo"/>
+  <depend package="image_transport"/>
+  
+  
+  
+</package>
+
+
