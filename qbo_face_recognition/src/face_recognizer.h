@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, 
  * MA 02110-1301, USA.
  *
- * Authors: Arturo Bajuelos <arturo@openqbo.com>
+ * Author: Arturo Bajuelos <arturo@openqbo.com>
  */
 
 #ifndef FACERECOGNIZER_H_
