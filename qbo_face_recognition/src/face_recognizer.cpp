@@ -1,7 +1,7 @@
 /*
  * Software License Agreement (GPLv2 License)
  * 
- * Copyright (c) 2012 OpenQbo, Inc.
+ * Copyright (c) 2011 OpenQbo, Inc.
  *
  * This program is free software; you can redistribute it and/or 
  * modify it under the terms of the GNU General Public License as 
