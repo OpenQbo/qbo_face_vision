@@ -174,7 +174,7 @@ void FaceFollower::cameraInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& i
 		p(cv::Rect(0,0,3,3)).convertTo(p_,CV_32F);
 
 		joint_states_sub_=private_nh_.subscribe<sensor_msgs::JointState>("/joint_states",10,&FaceFollower::jointStateCallback, this);
-		face_pos_sub_ = private_nh_.subscribe<qbo_face_tracking::FacePosAndSize>("/qbo_face_tracking/face_pos_and_size", 10, &FaceFollower::facePositionCallback, this);
+		face_pos_sub_ = private_nh_.subscribe<qbo_face_tracking::FacePosAndDist>("/qbo_face_tracking/face_pos_and_size", 10, &FaceFollower::facePositionCallback, this);
 	}
 
 }
@@ -184,7 +184,7 @@ void FaceFollower::cameraInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& i
  * This is the main callback of the node that moves the robot's head and base
  * to follow the face
  */
-void FaceFollower::facePositionCallback(const qbo_face_tracking::FacePosAndSizeConstPtr& head_pos_size)
+void FaceFollower::facePositionCallback(const qbo_face_tracking::FacePosAndDistConstPtr& head_pos_size)
 {
 	image_width_ = head_pos_size->image_width;
 	image_height_ = head_pos_size->image_height;

@@ -35,7 +35,7 @@
 #include <sensor_msgs/SetCameraInfo.h>
 
 
-#include <qbo_face_tracking/FacePosAndSize.h>
+#include <qbo_face_tracking/FacePosAndDist.h>
 
 class FaceFollower
 {
@@ -120,7 +120,7 @@ private:
 	/*
 	 * Callbacks
 	 */
-	void facePositionCallback(const qbo_face_tracking::FacePosAndSizeConstPtr& head_pos_size);
+	void facePositionCallback(const qbo_face_tracking::FacePosAndDistConstPtr& head_pos_size);
 	void jointStateCallback(const sensor_msgs::JointStateConstPtr& joint_state);
 	void cameraInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& info);
 

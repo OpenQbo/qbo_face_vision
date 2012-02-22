@@ -143,7 +143,7 @@ void FaceDetector::onInit()
 	 * Publishers of the node
 	 */
 	//Publisher of the face tracking position and size
-	face_position_and_size_pub_=private_nh_.advertise<qbo_face_tracking::FacePosAndSize>("face_pos_and_size", 1);
+	face_position_and_size_pub_=private_nh_.advertise<qbo_face_tracking::FacePosAndDist>("face_pos_and_size", 1);
 	//Publisher of the face image
 	face_pub_ = private_nh_.advertise<sensor_msgs::Image>("face_image", 1);
 	//Publisher of the viewer, using image transport for compression
@@ -394,7 +394,7 @@ void FaceDetector::imageCallback(const sensor_msgs::Image::ConstPtr& image_ptr)
 	}
 
 	//Create Face Pos and Size message
-    qbo_face_tracking::FacePosAndSize message;
+    qbo_face_tracking::FacePosAndDist message;
 	message.image_width=cv_ptr->image.cols;
 	message.image_height=cv_ptr->image.rows;
 	message.type_of_tracking = detection_type;

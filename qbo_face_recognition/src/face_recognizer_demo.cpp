@@ -47,7 +47,7 @@
 
 #include <qbo_face_recognition/GetName.h>
 #include <qbo_face_recognition/Teach.h>
-#include <qbo_face_tracking/FacePosAndSize.h>
+#include <qbo_face_tracking/FacePosAndDist.h>
 
 
 #include <boost/algorithm/string.hpp>
@@ -130,7 +130,7 @@ void faceImageCallback(const sensor_msgs::Image::ConstPtr& image_ptr)
 
 /*
 */
-void facePosCallback(const qbo_face_tracking::FacePosAndSize::ConstPtr& face_pos)
+void facePosCallback(const qbo_face_tracking::FacePosAndDist::ConstPtr& face_pos)
 {
 	if(face_pos->face_detected)
 	{
@@ -491,7 +491,7 @@ int main(int argc, char **argv)
 	* Callback for face tracking to check for faces
 	*/
 
-    face_pos_sub_ = private_nh_->subscribe<qbo_face_tracking::FacePosAndSize>("/qbo_face_tracking/face_pos_and_size", 10, &facePosCallback);
+    face_pos_sub_ = private_nh_->subscribe<qbo_face_tracking::FacePosAndDist>("/qbo_face_tracking/face_pos_and_size", 10, &facePosCallback);
 
 
 	/*
