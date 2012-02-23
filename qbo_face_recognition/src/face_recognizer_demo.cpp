@@ -491,7 +491,7 @@ int main(int argc, char **argv)
 	* Callback for face tracking to check for faces
 	*/
 
-    face_pos_sub_ = private_nh_->subscribe<qbo_face_tracking::FacePosAndDist>("/qbo_face_tracking/face_pos_and_size", 10, &facePosCallback);
+    face_pos_sub_ = private_nh_->subscribe<qbo_face_tracking::FacePosAndDist>("/qbo_face_tracking/face_pos_and_dist", 10, &facePosCallback);
 
 
 	/*

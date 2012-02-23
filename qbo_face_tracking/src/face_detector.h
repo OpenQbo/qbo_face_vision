@@ -46,7 +46,7 @@
 #include <image_transport/image_transport.h>
 #include <new_face_recognition/RecognizeFace.h>
 #include <new_face_recognition/GetName.h>
-#include <qbo_arduqbo/Nariz.h>
+#include <qbo_arduqbo/Nose.h>
 
 
 #define HEAD_SIZE 0.20

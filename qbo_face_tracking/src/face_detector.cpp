@@ -38,12 +38,12 @@ FaceDetector::~FaceDetector() {
 	ROS_INFO("Qbo face tracking successfully ended");
 
 	//Publisher of the nose color
-	nose_color_pub_ = private_nh_.advertise<qbo_arduqbo::Nariz>("/cmd_nariz", 4);
+	nose_color_pub_ = private_nh_.advertise<qbo_arduqbo::Nose>("/cmd_Nose", 4);
 
     /*
      * Creating structure to turn off the nose
      */
-    qbo_arduqbo::Nariz nose;
+    qbo_arduqbo::Nose nose;
     nose.header.stamp = ros::Time::now();
     nose.color=0;
 
@@ -143,13 +143,13 @@ void FaceDetector::onInit()
 	 * Publishers of the node
 	 */
 	//Publisher of the face tracking position and size
-	face_position_and_size_pub_=private_nh_.advertise<qbo_face_tracking::FacePosAndDist>("face_pos_and_size", 1);
+	face_position_and_size_pub_=private_nh_.advertise<qbo_face_tracking::FacePosAndDist>("face_pos_and_dist", 1);
 	//Publisher of the face image
 	face_pub_ = private_nh_.advertise<sensor_msgs::Image>("face_image", 1);
 	//Publisher of the viewer, using image transport for compression
 	viewer_image_pub_ = it_.advertise("viewer", 1);
 	//Publisher of the nose color
-	nose_color_pub_ = private_nh_.advertise<qbo_arduqbo::Nariz>("/cmd_nariz", 1);
+	nose_color_pub_ = private_nh_.advertise<qbo_arduqbo::Nose>("/cmd_nose", 1);
 
 	/*
 	 * Initialize some internal parameters values
@@ -251,7 +251,7 @@ void FaceDetector::imageCallback(const sensor_msgs::Image::ConstPtr& image_ptr)
     /*
      * Creating structure to publish nose color
      */
-    qbo_arduqbo::Nariz nose;
+    qbo_arduqbo::Nose nose;
     nose.header.stamp = ros::Time::now();
     nose.color=1;
 

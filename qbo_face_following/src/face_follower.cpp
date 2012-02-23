@@ -174,7 +174,7 @@ void FaceFollower::cameraInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& i
 		p(cv::Rect(0,0,3,3)).convertTo(p_,CV_32F);
 
 		joint_states_sub_=private_nh_.subscribe<sensor_msgs::JointState>("/joint_states",10,&FaceFollower::jointStateCallback, this);
-		face_pos_sub_ = private_nh_.subscribe<qbo_face_tracking::FacePosAndDist>("/qbo_face_tracking/face_pos_and_size", 10, &FaceFollower::facePositionCallback, this);
+		face_pos_sub_ = private_nh_.subscribe<qbo_face_tracking::FacePosAndDist>("/qbo_face_tracking/face_pos_and_dist", 10, &FaceFollower::facePositionCallback, this);
 	}
 
 }
