@@ -12,7 +12,7 @@
   <depend package="opencv2"/>
   <depend package="cv_bridge"/>
   <depend package="sensor_msgs"/>
-  <depend package="new_face_recognition"/>
+  <depend package="qbo_face_recognition"/>
   <depend package="qbo_arduqbo"/>
   <depend package="image_transport"/>
   
