@@ -44,8 +44,8 @@
 #include <sensor_msgs/SetCameraInfo.h>
 #include <qbo_face_tracking/FacePosAndDist.h>
 #include <image_transport/image_transport.h>
-#include <new_face_recognition/RecognizeFace.h>
-#include <new_face_recognition/GetName.h>
+#include <qbo_face_recognition/RecognizeFace.h>
+#include <qbo_face_recognition/GetName.h>
 #include <qbo_arduqbo/Nose.h>
 
 
