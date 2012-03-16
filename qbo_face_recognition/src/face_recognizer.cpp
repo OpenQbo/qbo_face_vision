@@ -117,7 +117,7 @@ void FaceRecognizer::onInit()
 	ROS_INFO("Loading persons' names...");
 	//Preparing face recognizer
 	loadPersonsNames();
-	ROS_INFO("%u persons' names collected!\n", persons_.size());
+	ROS_INFO("%u persons' names collected!\n", (unsigned int)persons_.size());
 
 	switch(recog_type_)
 	{

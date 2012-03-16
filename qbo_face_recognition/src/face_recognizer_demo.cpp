@@ -57,6 +57,7 @@
 using std::string;
 using std::vector;
 using std::stringstream;
+using std::endl;
 
 ros::NodeHandle * private_nh_;
 ros::Subscriber listener_sub;
