@@ -238,7 +238,7 @@ int FaceRecognizer::loadPersonsNames()
 		if (boost::filesystem::is_directory(itr->status()))
 		{
 
-			std::string person_name=itr->path().filename();
+			std::string person_name=itr->path().filename().string();
 
 			if(person_name.at(0)=='.')
 				continue;
@@ -517,7 +517,7 @@ int FaceRecognizer::loadOnePersonImages(Person &person)
 			//If the files extension is an image
 			if((extension==std::string(".jpg")) || (extension==std::string(".pgm")))
 			{
-				std::string imgFilename=person.images_dir_path_+"/"+itr->path().filename();
+				std::string imgFilename=person.images_dir_path_+"/"+itr->path().filename().string();
 				cv::Mat img =cv::imread(imgFilename);
 				person.images_.push_back(img);
 				num_images++;
@@ -1011,7 +1011,7 @@ int FaceRecognizer::teachPCA_Recognizer(string update_path)
 	{
 		if (boost::filesystem::is_directory(itr->status()))
 		{
-			std::string person_name=itr->path().filename();
+			std::string person_name=itr->path().filename().string();
 
 			if(person_name.at(0)=='.')
 				continue;
@@ -1398,7 +1398,7 @@ int FaceRecognizer::teachBOW_Recognizer(string update_path)
 	{
 		if (boost::filesystem::is_directory(itr->status()))
 		{
-			std::string person_name=itr->path().filename();
+			std::string person_name=itr->path().filename().string();
 
 			if(person_name.at(0)=='.')
 				continue;

@@ -57,6 +57,7 @@
 
 using std::string;
 using std::vector;
+using std::cout;
 
 class FaceRecognizer {
 private:
