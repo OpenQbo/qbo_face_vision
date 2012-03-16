@@ -68,8 +68,7 @@ FaceDetector::~FaceDetector() {
 void FaceDetector::setROSParams()
 {
 	//Setting default path of the Haar cascade classifier
-	string default_classifier_path = ros::package::getPath("opencv2") +
-			"/opencv/share/opencv/haarcascades/haarcascade_frontalface_alt2.xml";
+	string default_classifier_path = "/usr/share/OpenCV-2.3.1/haarcascades/haarcascade_frontalface_alt2.xml";
 
 	//Set default parameter for face classifier path
 	private_nh_.param("/qbo_face_tracking/face_classifier_path", face_classifier_path_, default_classifier_path);
@@ -143,11 +142,11 @@ void FaceDetector::onInit()
 	 * Publishers of the node
 	 */
 	//Publisher of the face tracking position and size
-	face_position_and_size_pub_=private_nh_.advertise<qbo_face_msgs::FacePosAndDist>("face_pos_and_dist", 1);
+	face_position_and_size_pub_=private_nh_.advertise<qbo_face_msgs::FacePosAndDist>("/qbo_face_tracking/face_pos_and_dist", 1);
 	//Publisher of the face image
-	face_pub_ = private_nh_.advertise<sensor_msgs::Image>("face_image", 1);
+	face_pub_ = private_nh_.advertise<sensor_msgs::Image>("/qbo_face_tracking/face_image", 1);
 	//Publisher of the viewer, using image transport for compression
-	viewer_image_pub_ = it_.advertise("viewer", 1);
+	viewer_image_pub_ = it_.advertise("/qbo_face_tracking/viewer", 1);
 	//Publisher of the nose color
 	nose_color_pub_ = private_nh_.advertise<qbo_arduqbo::Nose>("/cmd_nose", 1);
 
