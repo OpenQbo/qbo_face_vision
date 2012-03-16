@@ -56,6 +56,7 @@
 
 using std::string;
 using std::vector;
+using std::stringstream;
 
 ros::NodeHandle * private_nh_;
 ros::Subscriber listener_sub;
@@ -268,8 +269,8 @@ bool learnPerson(string person_name)
 	{
 		if (boost::filesystem::is_directory(itr->status()))
 		{
-			std::string person_name=itr->path().filename();
-			boost::filesystem::remove_all(new_persons_path_+"/"+person_name);
+			std::string person_name=itr->path().filename().string();
+			boost::filesystem::remove(new_persons_path_+"/"+person_name);
 		}
 	}
 	return true;
