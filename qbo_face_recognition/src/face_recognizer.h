@@ -26,7 +26,8 @@
 
 #include <iostream>
 #include <vector>
-#include <algorithm>
+#include <cmath>
+
 #include <sstream>
 #include <string>
 
@@ -55,11 +56,7 @@
 
 #include "person.h"
 
-using std::string;
-using std::vector;
-using std::cout;
-using std::endl;
-using std::stringstream;
+using namespace std;
 
 class FaceRecognizer {
 private:
