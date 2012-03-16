@@ -53,8 +53,7 @@
 
 //#define WITH_GPU
 
-using std::string;
-using std::vector;
+using namespace std;
 
 class FaceDetector
 {
