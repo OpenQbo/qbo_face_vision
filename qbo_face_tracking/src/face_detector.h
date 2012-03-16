@@ -88,10 +88,10 @@ private:
 	 * Elements for the face recognition client
 	 */
 	ros::ServiceClient client_recognize_;
-	new_face_recognition::RecognizeFace srv;
+	qbo_face_msgs::RecognizeFace srv;
 
 	ros::ServiceClient client_get_name;
-	new_face_recognition::GetName srv_get_name;
+	qbo_face_msgs::GetName srv_get_name;
 
 	/*
 	 * Internal parameters
