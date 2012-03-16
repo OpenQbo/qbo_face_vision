@@ -3,6 +3,7 @@ Source: qboros-electric-qbo-face-vision
 Version: 1.0-openqbo0
 Priority: standard
 Architecture: amd64
+Section: OpenQbo
 Depends: qboros-electric-qbo-arduqbo, qboros-electric-qbo-listen, qboros-electric-qbo-talk
 Maintainer: Arturo Bajuelos <arturo@openqbo.org>
 Homepage: http://openqbo.org/wiki/doku.php?id=qbo_apps:ros_stack:qbo_face_vision
