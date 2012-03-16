@@ -710,7 +710,7 @@ string FaceRecognizer::recognizePCA_SVM(cv::Mat img)
 
 
 
-bool FaceRecognizer::recognizeService(qbo_face_recognition::RecognizeFace::Request  &req, qbo_face_recognition::RecognizeFace::Response &res )
+bool FaceRecognizer::recognizeService(qbo_face_msgs::RecognizeFace::Request  &req, qbo_face_msgs::RecognizeFace::Response &res )
 {
 
 	if(persons_.size() == 0) //If there are no persons in Data Base
@@ -761,7 +761,7 @@ bool FaceRecognizer::recognizeService(qbo_face_recognition::RecognizeFace::Reque
 }
 
 
-bool FaceRecognizer::recognizeStabilizerService(qbo_face_recognition::RecognizeFace::Request  &req, qbo_face_recognition::RecognizeFace::Response &res )
+bool FaceRecognizer::recognizeStabilizerService(qbo_face_msgs::RecognizeFace::Request  &req, qbo_face_msgs::RecognizeFace::Response &res )
 {
 
 	if(persons_.size() == 0) //If there are no persons in Data Base
@@ -908,7 +908,7 @@ bool FaceRecognizer::recognizeStabilizerService(qbo_face_recognition::RecognizeF
 
 
 
-bool FaceRecognizer::getNameService(qbo_face_recognition::GetName::Request  &req, qbo_face_recognition::GetName::Response &res )
+bool FaceRecognizer::getNameService(qbo_face_msgs::GetName::Request  &req, qbo_face_msgs::GetName::Response &res )
 {
 	/**Calc max value of stabilizer**/
 
@@ -964,7 +964,7 @@ bool FaceRecognizer::getNameService(qbo_face_recognition::GetName::Request  &req
 	return true;
 }
 
-bool FaceRecognizer::teachService(qbo_face_recognition::Teach::Request  &req, qbo_face_recognition::Teach::Response &res )
+bool FaceRecognizer::teachService(qbo_face_msgs::Teach::Request  &req, qbo_face_msgs::Teach::Response &res )
 {
 	int returned = true;
 

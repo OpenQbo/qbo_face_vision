@@ -45,9 +45,9 @@
 
 #include <qbo_listen/Listened.h>
 
-#include <qbo_face_recognition/GetName.h>
-#include <qbo_face_recognition/Teach.h>
-#include <qbo_face_tracking/FacePosAndDist.h>
+#include <qbo_face_msgs/GetName.h>
+#include <qbo_face_msgs/Teach.h>
+#include <qbo_face_msgs/FacePosAndDist.h>
 
 
 #include <boost/algorithm/string.hpp>
@@ -69,8 +69,8 @@ qbo_talk::Text2Speach srv_talker;
 ros::ServiceClient client_get_name_;
 ros::ServiceClient client_teach;
 
-qbo_face_recognition::GetName srv_get_name_;
-qbo_face_recognition::Teach srv_teach;
+qbo_face_msgs::GetName srv_get_name_;
+qbo_face_msgs::Teach srv_teach;
 
 vector<cv::Mat> received_faces_;
 
@@ -130,7 +130,7 @@ void faceImageCallback(const sensor_msgs::Image::ConstPtr& image_ptr)
 
 /*
 */
-void facePosCallback(const qbo_face_tracking::FacePosAndDist::ConstPtr& face_pos)
+void facePosCallback(const qbo_face_msgs::FacePosAndDist::ConstPtr& face_pos)
 {
 	if(face_pos->face_detected)
 	{
@@ -477,8 +477,8 @@ int main(int argc, char **argv)
 	/*
 	 * Set service clients for face recognition
 	 */
-	client_get_name_ = private_nh_->serviceClient<qbo_face_recognition::GetName>("/qbo_face_recognition/get_name");
-	client_teach = private_nh_->serviceClient<qbo_face_recognition::Teach>("/qbo_face_recognition/teach");
+	client_get_name_ = private_nh_->serviceClient<qbo_face_msgs::GetName>("/qbo_face_recognition/get_name");
+	client_teach = private_nh_->serviceClient<qbo_face_msgs::Teach>("/qbo_face_recognition/teach");
 
 	/*
 	 * Set listener subscriber to listen to the respective topics
@@ -491,7 +491,7 @@ int main(int argc, char **argv)
 	* Callback for face tracking to check for faces
 	*/
 
-    face_pos_sub_ = private_nh_->subscribe<qbo_face_tracking::FacePosAndDist>("/qbo_face_tracking/face_pos_and_dist", 10, &facePosCallback);
+    face_pos_sub_ = private_nh_->subscribe<qbo_face_msgs::FacePosAndDist>("/qbo_face_tracking/face_pos_and_dist", 10, &facePosCallback);
 
 
 	/*

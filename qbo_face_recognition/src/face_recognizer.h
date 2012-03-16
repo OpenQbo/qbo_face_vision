@@ -44,9 +44,9 @@
 
 #include "boost/filesystem.hpp"   // includes all needed Boost.Filesystem declarations
 
-#include "qbo_face_recognition/RecognizeFace.h"
-#include "qbo_face_recognition/GetName.h"
-#include "qbo_face_recognition/Teach.h"
+#include "qbo_face_msgs/RecognizeFace.h"
+#include "qbo_face_msgs/GetName.h"
+#include "qbo_face_msgs/Teach.h"
 
 #include "sensor_msgs/Image.h"
 
@@ -250,13 +250,13 @@ private:
 
 	//Service for face recognition
 
-	bool recognizeService(qbo_face_recognition::RecognizeFace::Request  &req, qbo_face_recognition::RecognizeFace::Response &res);
+	bool recognizeService(qbo_face_msgs::RecognizeFace::Request  &req, qbo_face_msgs::RecognizeFace::Response &res);
 
-	bool recognizeStabilizerService(qbo_face_recognition::RecognizeFace::Request  &req, qbo_face_recognition::RecognizeFace::Response &res);
+	bool recognizeStabilizerService(qbo_face_msgs::RecognizeFace::Request  &req, qbo_face_msgs::RecognizeFace::Response &res);
 
-	bool getNameService(qbo_face_recognition::GetName::Request  &req, qbo_face_recognition::GetName::Response &res);
+	bool getNameService(qbo_face_msgs::GetName::Request  &req, qbo_face_msgs::GetName::Response &res);
 
-	bool teachService(qbo_face_recognition::Teach::Request  &req, qbo_face_recognition::Teach::Response &res );
+	bool teachService(qbo_face_msgs::Teach::Request  &req, qbo_face_msgs::Teach::Response &res );
 
 
 	//Auxiliary functions to get SVM params

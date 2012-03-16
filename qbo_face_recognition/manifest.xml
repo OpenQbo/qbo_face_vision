@@ -15,7 +15,7 @@
   <depend package="cv_bridge"/>
   <depend package="qbo_talk"/>
   <depend package="qbo_listen"/>
-  <depend package="qbo_face_tracking"/>
+  <depend package="qbo_face_msgs"/>
 
 </package>
 

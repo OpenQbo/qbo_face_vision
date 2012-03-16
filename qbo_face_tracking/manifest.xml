@@ -15,6 +15,7 @@
   <depend package="qbo_face_recognition"/>
   <depend package="qbo_arduqbo"/>
   <depend package="image_transport"/>
+  <depend package="qbo_face_msgs"/>
   
   
   
