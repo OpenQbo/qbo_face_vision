@@ -288,7 +288,7 @@ void listenerCallback(const qbo_listen::ListenedConstPtr& msg)
 	
 	if(! face_detected_)
 	{
-		ROS_INFO("Have have not been detected. Ignoring all commands");
+		ROS_INFO("A face have have not been detected. Ignoring all commands");
 		return;
 	}
 		
@@ -474,7 +474,7 @@ int main(int argc, char **argv)
 	/*
 	 * Set service client for qbo talker
 	 */
-	client_talker = private_nh_->serviceClient<qbo_talk::Text2Speach>("/Qbo/festivalSay");
+	client_talker = private_nh_->serviceClient<qbo_talk::Text2Speach>("/qbo_talk/festival_say");
 
 	/*
 	 * Set service clients for face recognition
