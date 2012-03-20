@@ -38,11 +38,23 @@ FaceRecognizer::~FaceRecognizer() {
 void FaceRecognizer::setROSParams()
 {
 
+	string base_faces_path = ros::package::getPath("qbo_face_recognition") + "/faces";
+
+	//Make sure the default folders exist
+	if(!boost::filesystem::is_directory(base_faces_path))
+		boost::filesystem::create_directory(base_faces_path);
+
+	if(!boost::filesystem::is_directory(base_faces_path+"/faces_db"))
+		boost::filesystem::create_directory(base_faces_path+"/faces_db");
+		
+	if(!boost::filesystem::is_directory(base_faces_path+"/new_faces"))
+		boost::filesystem::create_directory(base_faces_path+"/new_faces");
+
 	//Setting default path for faces database
 	string default_faces_db_path = ros::package::getPath("qbo_face_recognition") +"/faces/faces_db/";
+
 	//Set default parameter for faces database
 	private_nh_.param("/qbo_face_recognition/faces_path", faces_db_path_, default_faces_db_path);
-
 
 	//Setting default path for the update path, i.e., the folder where the temporary images to be learned
 	//are going to be stored
