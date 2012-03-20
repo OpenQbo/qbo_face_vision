@@ -80,7 +80,7 @@ int num_images_to_hold_ = 20;
 double wait_for_name_tolerance_ = 4.0;
 
 
-string new_persons_path_ = "/opt/qbo/ros_stacks/qbo_apps/qbo_face_recognition/faces/new_faces";
+string new_persons_path_ = "/opt/ros/electric/stacks/qbo_stack/qbo_face_vision/qbo_face_recognition/faces/new_faces";
 
 bool learn_request = false;
 string name_to_learn_ = "";
@@ -271,7 +271,7 @@ bool learnPerson(string person_name)
 		if (boost::filesystem::is_directory(itr->status()))
 		{
 			std::string person_name=itr->path().filename().string();
-			boost::filesystem::remove(new_persons_path_+"/"+person_name);
+			boost::filesystem::remove_all(new_persons_path_+"/"+person_name);
 		}
 	}
 	return true;
