@@ -2,8 +2,8 @@
 	 <node name="qbo_face_recognition" pkg="qbo_face_recognition" type="qbo_face_recognition" output="screen" >
 	 </node>
 
-	<param name="/qbo_face_recognition/faces_path" value="/opt/qbo/ros_stacks/qbo_apps/qbo_face_recognition/faces/faces_db" />
-	<param name="/qbo_face_recognition/uptate_path" value="/opt/qbo/ros_stacks/qbo_apps/qbo_face_recognition/faces/new_faces" />
+	<!-- <param name="/qbo_face_recognition/faces_path" value="/opt/ros/electric/stacks/qbo_stack/qbo_face_vision/qbo_face_recognition/faces/faces_db" /> -->
+	<!-- <param name="/qbo_face_recognition/uptate_path" value="/opt/ros/electric/stacks/qbo_stack/qbo_face_vision/qbo_face_recognition/faces/new_faces" /> -->
 	<param name="/qbo_face_recognition/recognition_type" value="0" />
 	<param name="/qbo_face_recognition/stabilizer_threshold" value="4" />
 	<param name="/qbo_face_recognition/stabilizer_max" value="7" />
