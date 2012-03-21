@@ -36,6 +36,7 @@
 #include <boost/algorithm/string.hpp>
 #include "boost/filesystem.hpp"   // includes all needed Boost.Filesystem declarations
 
+#include <iostream>
 
 using std::string;
 using std::vector;
@@ -300,6 +301,7 @@ ROS_INFO("--------------------------------->>>>>>>>>> vamos coooono");
 ROS_INFO("--------------------------------->>>>>>>>>> entrenamos cara");
                         ros::NodeHandle n;
                         ros::Publisher learningFace_confirmation = n.advertise<std_msgs::String>("/LearningFaceIsDone", 5);
+			usleep(500);
                         if(learnPerson(name_to_learn_)){
  ROS_INFO("--------------------------------->>>>>>>>>> entrenamiento terminado y OK");
         //                      speak_this("OK. I am Ready to recognize you");
@@ -309,6 +311,8 @@ ROS_INFO("--------------------------------->>>>>>>>>> entrenamos cara");
                                 msg.data = ss.str();
 
                                 learningFace_confirmation.publish(msg);
+				learningFace_confirmation.publish(msg);
+				learningFace_confirmation.publish(msg);
 
                         }else{
  ROS_INFO("--------------------------------->>>>>>>>>> entrenamiento terminado y con error");
@@ -319,6 +323,9 @@ ROS_INFO("--------------------------------->>>>>>>>>> entrenamos cara");
                                 msg.data = ss.str();
 
                                 learningFace_confirmation.publish(msg);
+				learningFace_confirmation.publish(msg);
+				learningFace_confirmation.publish(msg);
+
                         }
 
                         learn_request = false;
