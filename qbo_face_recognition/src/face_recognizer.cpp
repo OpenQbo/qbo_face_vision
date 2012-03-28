@@ -1834,7 +1834,7 @@ cv::Mat FaceRecognizer::equalizeFace(cv::Mat face)
 	cv::equalizeHist(equalized_face, equalized_face);
 
 	//Apply ellipse mask
-	/*
+        /*	
 	cv::Mat mask = cv::Mat::zeros(equalized_face.size(), equalized_face.type());
 	cv::Mat mask2 = cv::Mat::ones(equalized_face.size(), equalized_face.type())*255/2.;
 
@@ -1848,8 +1848,8 @@ cv::Mat FaceRecognizer::equalizeFace(cv::Mat face)
 
 	cv::bitwise_and(equalized_face, mask, equalized_face);
 	cv::bitwise_or(equalized_face, mask2, equalized_face);
-
 	*/
+
 	return equalized_face;
 }
 

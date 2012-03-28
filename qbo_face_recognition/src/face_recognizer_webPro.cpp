@@ -24,13 +24,11 @@
 #include <sensor_msgs/image_encodings.h>
 #include <std_msgs/String.h>
 
-#include <qbo_talk/Text2Speach.h>
-
 #include <qbo_listen/Listened.h>
 
-#include <qbo_face_recognition/GetName.h>
-#include <qbo_face_recognition/Teach.h>
-#include <qbo_face_tracking/FacePosAndSize.h>
+#include <qbo_face_msgs/GetName.h>
+#include <qbo_face_msgs/Teach.h>
+#include <qbo_face_msgs/FacePosAndDist.h>
 
 
 #include <boost/algorithm/string.hpp>
@@ -40,6 +38,7 @@
 
 using std::string;
 using std::vector;
+using std::stringstream;
 
 ros::NodeHandle * private_nh_;
 ros::Subscriber listener_sub;
@@ -47,14 +46,13 @@ ros::Subscriber listener_sub_2;
 ros::Subscriber image_sub_;
 ros::Subscriber face_pos_sub_ ;
 ros::ServiceClient client_talker;
-qbo_talk::Text2Speach srv_talker;
 
 
 ros::ServiceClient client_get_name_;
 ros::ServiceClient client_teach;
 
-qbo_face_recognition::GetName srv_get_name_;
-qbo_face_recognition::Teach srv_teach;
+qbo_face_msgs::GetName srv_get_name_;
+qbo_face_msgs::Teach srv_teach;
 
 vector<cv::Mat> received_faces_;
 
@@ -62,26 +60,14 @@ int num_images_to_hold_ = 20;
 double wait_for_name_tolerance_ = 4.0;
 
 
-string new_persons_path_ = "/opt/qbo/ros_stacks/qbo_apps/qbo_face_recognition/faces/new_faces";
+string new_persons_path_default_ = "/opt/ros/electric/stacks/qbo_stack/qbo_face_vision/qbo_face_recognition/faces/new_faces/";
+string new_persons_path_;
 
 bool learn_request = false;
 string name_to_learn_ = "";
 
 bool face_detected_ = false; /*Bool and indicates if a face hasn't been detected so as to ingnore listening */
 
-
-/*
- * Method that, by receiving a string, makes the robot talk that string
- */
-void speak_this(string to_speak)
-{
-	srv_talker.request.command = to_speak;
-
-	if (client_talker.call(srv_talker))
-		ROS_INFO("Talked: %s", to_speak.c_str());
-	else
-		ROS_ERROR("Failed to call the service of qbo_talk");
-}
 
 /*
  * Image callback of qbo_face_tracking images to store the images when learning is needed
@@ -114,7 +100,7 @@ void faceImageCallback(const sensor_msgs::Image::ConstPtr& image_ptr)
 
 /*
 */
-void facePosCallback(const qbo_face_tracking::FacePosAndSize::ConstPtr& face_pos)
+void facePosCallback(const qbo_face_msgs::FacePosAndDist::ConstPtr& face_pos)
 {
 	if(face_pos->face_detected)
 	{
@@ -188,8 +174,8 @@ bool learnPerson(string person_name)
 	image_sub_=private_nh_->subscribe<sensor_msgs::Image>("/qbo_face_tracking/face_image",1,&faceImageCallback);
 
 	//Waiting for a minimum number of face images to arrive
-	while((int)received_faces_.size()<num_images_to_hold_)
-		ros::spinOnce();
+	while((int)received_faces_.size()<num_images_to_hold_ && ros::ok())
+ 		ros::spinOnce();
 
 	//Unsubscribe to topic of faces
 	image_sub_.shutdown();
@@ -232,7 +218,6 @@ bool learnPerson(string person_name)
 	ROS_INFO("Faces images for %s saved. Calling the teach service of Qbo face recognition node.", person_name.c_str());
 	srv_teach.request.update_path = new_persons_path_;
 
-	speak_this("I am training myself");
 	if (client_teach.call(srv_teach))
 	{
 		ROS_INFO("Learning DONE!");
@@ -252,7 +237,7 @@ bool learnPerson(string person_name)
 	{
 		if (boost::filesystem::is_directory(itr->status()))
 		{
-			std::string person_name=itr->path().filename();
+			std::string person_name=itr->path().filename().string();
 			boost::filesystem::remove_all(new_persons_path_+"/"+person_name);
 		}
 	}
@@ -274,7 +259,6 @@ void listenerCallback(const std_msgs::String msg)//qbo_listen::ListenedConstPtr&
 		boost::split(words, listened, boost::is_any_of(" "));
 		if(words.size()> 3 && words[0]=="MY" && words[1] == "NAME") //My name is #####
 		{	//Erase "MY NAME IS"
-ROS_INFO("--------------------------------->>>>>>>>>> vamos coooono");
 
 			for(unsigned int i = 0; i<3;i++)
 			{
@@ -304,7 +288,6 @@ ROS_INFO("--------------------------------->>>>>>>>>> entrenamos cara");
 			usleep(500);
                         if(learnPerson(name_to_learn_)){
  ROS_INFO("--------------------------------->>>>>>>>>> entrenamiento terminado y OK");
-        //                      speak_this("OK. I am Ready to recognize you");
                                 std_msgs::String msg;
                                 std::stringstream ss;
                                 ss << "ok";
@@ -316,7 +299,6 @@ ROS_INFO("--------------------------------->>>>>>>>>> entrenamos cara");
 
                         }else{
  ROS_INFO("--------------------------------->>>>>>>>>> entrenamiento terminado y con error");
-        //                      speak_this("Oh oh. Problem. I could not train myself");
                                 std_msgs::String msg;
                                 std::stringstream ss;
                                 ss << "error";
@@ -355,8 +337,8 @@ int main(int argc, char **argv)
 	/*
 	 * Set service clients for face recognition
 	 */
-	client_get_name_ = private_nh_->serviceClient<qbo_face_recognition::GetName>("/qbo_face_recognition/get_name");
-	client_teach = private_nh_->serviceClient<qbo_face_recognition::Teach>("/qbo_face_recognition/teach");
+	client_get_name_ = private_nh_->serviceClient<qbo_face_msgs::GetName>("/qbo_face_recognition/get_name");
+	client_teach = private_nh_->serviceClient<qbo_face_msgs::Teach>("/qbo_face_recognition/teach");
 
 	/*
 	 * Set listener subscriber to listen to the respective topics
@@ -369,7 +351,7 @@ int main(int argc, char **argv)
 	* Callback for face tracking to check for faces
 	*/
 
-    face_pos_sub_ = private_nh_->subscribe<qbo_face_tracking::FacePosAndSize>("/qbo_face_tracking/face_pos_and_size", 10, &facePosCallback);
+    face_pos_sub_ = private_nh_->subscribe<qbo_face_msgs::FacePosAndDist>("/qbo_face_tracking/face_pos_and_size", 10, &facePosCallback);
 
 
 	/*
@@ -384,10 +366,9 @@ int main(int argc, char **argv)
 	private_nh_->getParam("/qbo_face_recognition/update_path", new_persons_path_);
 
 	if(new_persons_path_ == "")
-		new_persons_path_ = "/opt/qbo/ros_stacks/qbo_apps/qbo_face_recognition/faces/new_faces";
+		new_persons_path_ = new_persons_path_default_;
 
 	ROS_INFO("Faced Recognition WEBPRO Launched. Ready for incoming orders");
-//	speak_this("I am ready to recognize faces");
 	ros::spin();
 
 	private_nh_->deleteParam("/qbo_face_recognition_webPro/num_images_to_hold");

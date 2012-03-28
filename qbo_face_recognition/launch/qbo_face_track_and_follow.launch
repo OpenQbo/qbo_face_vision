@@ -2,7 +2,7 @@
 	
 	
 	<!-- Face Tracking node to detect faces -->
-	<node name="qbo_face_tracking" pkg="qbo_face_tracking" type="qbo_face_tracking" output="screen">
+	<node name="qbo_face_tracking" pkg="qbo_face_tracking" type="qbo_face_tracking">
 	 </node>
 	 <!-- <param name="/qbo_face_tracking/face_classifier_path" value="0" /> -->
 	 <!-- <param name="/qbo_face_tracking/default_pos_x" value="0" /> -->
