@@ -17,8 +17,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, 
 # MA 02110-1301, USA.
 
-sensor_msgs/Image face
+string person_name      #Name of the object to be learned
 ---
-string name
-bool recognized
-
+bool learned            #Return true if the object was learned. If false, no new object was learned

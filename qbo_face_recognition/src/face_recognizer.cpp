@@ -93,6 +93,22 @@ void FaceRecognizer::setROSParams()
 	private_nh_.param<int>("/qbo_face_recognition/pca_dimension", pca_dimension_, 40);
 	private_nh_.param<int>("/qbo_face_recognition/pca_image_height", image_size_.height, 100);
 	private_nh_.param<int>("/qbo_face_recognition/pca_image_width", image_size_.width, 100);
+
+	
+	/*
+	* Parameters for the service learn_faces
+	*/
+	
+	//Number of images to store when learning faces
+	private_nh_.param<int>("/qbo_face_recognition/num_images_to_hold", num_images_to_hold_, 20);
+	
+	string default_face_topic = "/qbo_face_tracking/face_image";
+	
+	private_nh_.param("/qbo_face_recognition/face_topic", face_topic_, default_face_topic);
+
+	//Maximum allowed time to capture images. In seconds.
+	private_nh_.param<double>("/qbo_face_recognition/max_time_to_learn", max_time_to_learn, 30.0);
+
 }
 
 void FaceRecognizer::deleteROSParams()
@@ -218,11 +234,11 @@ void FaceRecognizer::onInit()
 	/*
 	 * Advertise ROS services
 	 */
-
 	service_= private_nh_.advertiseService("/qbo_face_recognition/recognize", &FaceRecognizer::recognizeService, this);
 	service3_= private_nh_.advertiseService("/qbo_face_recognition/recognize_with_stabilizer", &FaceRecognizer::recognizeStabilizerService, this);
 	service2_= private_nh_.advertiseService("/qbo_face_recognition/get_name", &FaceRecognizer::getNameService, this);
-	service4_= private_nh_.advertiseService("/qbo_face_recognition/teach", &FaceRecognizer::teachService, this);
+	service4_= private_nh_.advertiseService("/qbo_face_recognition/train", &FaceRecognizer::trainService, this);
+	service5_= private_nh_.advertiseService("/qbo_face_recognition/learn_faces", &FaceRecognizer::learnFaces, this);
 }
 
 /*
@@ -976,27 +992,48 @@ bool FaceRecognizer::getNameService(qbo_face_msgs::GetName::Request  &req, qbo_f
 	return true;
 }
 
-bool FaceRecognizer::teachService(qbo_face_msgs::Teach::Request  &req, qbo_face_msgs::Teach::Response &res )
+bool FaceRecognizer::trainService(qbo_face_msgs::Train::Request  &req, qbo_face_msgs::Train::Response &res )
 {
 	int returned = true;
 
 	switch(recog_type_)
 	{
 	case PCA_SVM:
-		returned = teachPCA_Recognizer(req.update_path);
+		returned = trainPCA_Recognizer(req.update_path);
 		break;
 	case BAG_OF_WORDS_SVM:
-		returned = teachBOW_Recognizer(req.update_path);
+		returned = trainBOW_Recognizer(req.update_path);
 		break;
 	}
 
 
 	if(returned == 0)
 	{
+		string path;
+		if(req.update_path.compare("") == 0)
+			path = update_path_;
+		else
+			path = req.update_path;
+			
+		//Delete all folders in new persons path, so as to not repeat these images in the next learning phase
+		for (boost::filesystem::directory_iterator itr(path); itr!=boost::filesystem::directory_iterator(); ++itr)
+		{
+			if (boost::filesystem::is_directory(itr->status()))
+			{
+				std::string person_name=itr->path().filename().string();
+				boost::filesystem::remove_all(path+"/"+person_name);
+			}
+		}
 		res.taught = true;
 	}
 	else
 		res.taught = false;
+
+
+
+
+
+
 
 
 	return true;
@@ -1004,7 +1041,155 @@ bool FaceRecognizer::teachService(qbo_face_msgs::Teach::Request  &req, qbo_face_
 
 
 
-int FaceRecognizer::teachPCA_Recognizer(string update_path)
+bool FaceRecognizer::learnFaces(qbo_face_msgs::LearnFaces::Request  &req, qbo_face_msgs::LearnFaces::Response &res )
+{	
+	string person_name = req.person_name;
+
+	if(person_name.compare("") == 0) //If object's name is empty, return an error
+	{
+		res.learned = false;
+		ROS_ERROR("Invalid person name");
+		return true;
+	}
+
+	ROS_INFO("Trying to learn faces of person %s", person_name.c_str());
+
+	/*
+	 * Clear vector of received faces
+	 */
+	received_faces_.clear();
+
+	//Subscribe to face image topic
+	ros::Subscriber image_sub=private_nh_.subscribe<sensor_msgs::Image>(face_topic_,1,&FaceRecognizer::faceImageCallback, this);
+
+
+	//Defining time variables
+	ros::Time t1 = ros::Time::now();
+	ros::Time t2;
+	ros::Duration diff_time;
+	
+	//Last image index stored
+	unsigned int last_num = 0;
+	
+	//Waiting for a minimum number of face images to arrive
+	while((int)received_faces_.size()<num_images_to_hold_)
+	{	
+		usleep(200000);
+		ros::spinOnce();
+
+		if(last_num != received_faces_.size())
+		{
+			last_num = received_faces_.size();
+			ROS_INFO("%u faces received. %u more to go", last_num, num_images_to_hold_-last_num);
+		}
+
+		t2 = ros::Time::now();
+		diff_time = t2-t1;
+		
+		//Check if max time to store images has been reached
+		if(diff_time.toSec()>max_time_to_learn)
+			break;
+	}
+		
+	//Unsubscribe to topic of faces
+	image_sub.shutdown();
+	
+	
+	//Check if at least one face has been captured. If not, abort the service.
+	if(received_faces_.size() == 0)
+	{
+		ROS_WARN("TIMEOUT: No images were captured");
+		ROS_INFO("Aborting object learn...\n");
+		ROS_INFO("Ready to recognize or learn new objects");
+		res.learned = false;
+		return true;
+	}
+
+
+	/*
+		Storing captured images into the filesystem
+	*/
+
+	
+	if(!boost::filesystem::is_directory(update_path_))
+	{
+		//Create the main folder in the save path
+		boost::filesystem::create_directory(update_path_);
+	}
+
+	if(!boost::filesystem::is_directory(update_path_+"/"+person_name))
+		//Create the person's folder
+		boost::filesystem::create_directory(update_path_+"/"+person_name);
+
+	string time_now;
+	stringstream out;
+	out << time(NULL);
+	time_now = out.str();
+
+
+	ROS_INFO("Saving face images in a image files...");
+	//Save images
+	int image_index = 0;
+	for(unsigned int i = 0; i<received_faces_.size();i++)
+	{
+		string filename;
+		stringstream out_2;
+
+		out_2 <<update_path_+"/"+person_name<<"/"<<time_now<<"_"<<image_index<<".jpg";
+		filename = out_2.str();
+
+		vector<int> params;
+
+		params.push_back(CV_IMWRITE_JPEG_QUALITY);
+		params.push_back(100);
+		cv::imwrite(filename.c_str(), received_faces_[i], params);
+		image_index++;
+	}
+	
+	
+
+	ROS_INFO("Learn service successfully completed: %u faces has been stored for person %s", (unsigned int)received_faces_.size(), person_name.c_str());
+	
+	res.learned = true;
+
+	return true;
+}
+
+
+
+/*
+* Faces callback used to store the face's images in the learn_faces service
+*/
+void FaceRecognizer::faceImageCallback(const sensor_msgs::Image::ConstPtr& image_ptr)
+{
+    cv_bridge::CvImagePtr cv_ptr;
+
+    try
+    {
+      cv_ptr = cv_bridge::toCvCopy(image_ptr, sensor_msgs::image_encodings::BGR8);
+    }
+    catch (cv_bridge::Exception& e)
+    {
+		ROS_ERROR("Cv_bridge exception by receiving image of faces: %s", e.what());
+        return;
+    }
+
+    cv::Mat image_received;
+
+    //Erase vector if it is full
+        while((int)received_faces_.size()>=num_images_to_hold_)
+                received_faces_.erase(received_faces_.begin());
+
+        //Append it to vector of received messages
+        received_faces_.push_back(cv_ptr->image);
+
+        ROS_INFO("Face's images received");
+}
+
+
+
+
+int FaceRecognizer::trainPCA_Recognizer(string update_path)
 {
 
 	string path;
@@ -1382,7 +1567,7 @@ int FaceRecognizer::trainBOW_SVMClassifiers()
  *	persons's main path, add's it to the model, generate the vocabulary, retrain the classifiers.
  *	Return 0 if succeeded, and != 0 if not succeeded.
  */
-int FaceRecognizer::teachBOW_Recognizer(string update_path)
+int FaceRecognizer::trainBOW_Recognizer(string update_path)
 {
 
 	string path = update_path_;

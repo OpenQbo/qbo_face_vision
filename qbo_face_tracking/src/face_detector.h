@@ -68,6 +68,9 @@ private:
 	int check_track_obj_;
 	int undetected_threshold_;
 	double distance_threshold_;
+	bool send_to_face_recognizer_;
+	bool print_recognized_face_;
+
 
 	/*
 	 * ROS Elements
@@ -119,7 +122,7 @@ private:
 
 	cv::CascadeClassifier face_classifier_;
 	//Regarding FaceRecognizer
-	bool send_to_face_recognizer_;
+
 
 	/*
 	 * Methods

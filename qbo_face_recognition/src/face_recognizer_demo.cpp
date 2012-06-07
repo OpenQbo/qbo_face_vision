@@ -46,8 +46,10 @@
 #include <qbo_listen/Listened.h>
 
 #include <qbo_face_msgs/GetName.h>
-#include <qbo_face_msgs/Teach.h>
+#include <qbo_face_msgs/Train.h>
+#include "qbo_face_msgs/LearnFaces.h"
 #include <qbo_face_msgs/FacePosAndDist.h>
+
 
 
 #include <boost/algorithm/string.hpp>
@@ -69,10 +71,12 @@ qbo_talk::Text2Speach srv_talker;
 
 
 ros::ServiceClient client_get_name_;
-ros::ServiceClient client_teach;
+ros::ServiceClient client_train_;
+ros::ServiceClient client_learn_faces_;
 
 qbo_face_msgs::GetName srv_get_name_;
-qbo_face_msgs::Teach srv_teach;
+qbo_face_msgs::Train srv_train;
+qbo_face_msgs::LearnFaces srv_learn_faces_;
 
 vector<cv::Mat> received_faces_;
 
@@ -101,34 +105,6 @@ void speak_this(string to_speak)
 		ROS_ERROR("Failed to call the service of qbo_talk");
 }
 
-/*
- * Image callback of qbo_face_tracking images to store the images when learning is needed
- */
-void faceImageCallback(const sensor_msgs::Image::ConstPtr& image_ptr)
-{
-    cv_bridge::CvImagePtr cv_ptr;
-
-    try
-    {
-      cv_ptr = cv_bridge::toCvCopy(image_ptr, sensor_msgs::image_encodings::BGR8);
-    }
-    catch (cv_bridge::Exception& e)
-    {
-		ROS_ERROR("Cv_bridge exception by receiving image of qbo_face_tracking: %s", e.what());
-		return;
-    }
-
-    cv::Mat image_received;
-
-    //Erase vector if it is full
-	while((int)received_faces_.size()>=num_images_to_hold_)
-		received_faces_.erase(received_faces_.begin());
-
-	//Append it to vector of received messages
-	received_faces_.push_back(cv_ptr->image);
-
-	ROS_INFO("Face image received");
-}
 
 /*
 */
@@ -189,91 +165,38 @@ string getNameFromFaceRecognizer()
 
 /*
  * Given the person's name, it stored the images received in the proper
- * folder and uses the qbo_face_recognition service to teach to the recognizer the new person.
+ * folder and uses the qbo_face_recognition service to train to the recognizer the new person.
  */
 bool learnPerson(string person_name)
 {
 
+	srv_learn_faces_.request.person_name = person_name;
 
-	/*
-	 * Clear vector of received faces
-	 */
-	received_faces_.clear();
-
-	ROS_INFO("Collecting images for %s", person_name.c_str());
-
-	//Subscribe to face image topic
-	image_sub_=private_nh_->subscribe<sensor_msgs::Image>("/qbo_face_tracking/face_image",1,&faceImageCallback);
-
-	//Waiting for a minimum number of face images to arrive
-	while((int)received_faces_.size()<num_images_to_hold_)
-		ros::spinOnce();
-
-	//Unsubscribe to topic of faces
-	image_sub_.shutdown();
-
-	if(!boost::filesystem::is_directory(new_persons_path_))
+	if (client_learn_faces_.call(srv_learn_faces_))
 	{
-		//Create the main folder in the save path
-		boost::filesystem::create_directory(new_persons_path_);
+		if(srv_learn_faces_.response.learned)
+			ROS_INFO("Images of faces captured successfully!");
 	}
-
-	if(!boost::filesystem::is_directory(new_persons_path_+"/"+person_name))
-		//Create the person's folder
-		boost::filesystem::create_directory(new_persons_path_+"/"+person_name);
-
-	string time_now;
-	stringstream out;
-	out << time(NULL);
-	time_now = out.str();
-
-
-	ROS_INFO("Saving face images in a image files...");
-	//Save images
-	int image_index = 0;
-	for(unsigned int i = 0; i<received_faces_.size();i++)
+	else
 	{
-		string filename;
-		stringstream out_2;
-
-		out_2 <<new_persons_path_+"/"+person_name<<"/"<<time_now<<"_"<<image_index<<".jpg";
-		filename = out_2.str();
-
-		vector<int> params;
-
-		params.push_back(CV_IMWRITE_JPEG_QUALITY);
-		params.push_back(100);
-		cv::imwrite(filename.c_str(), received_faces_[i], params);
-		image_index++;
+		ROS_ERROR("Failed to call service learn faces");
+		return false;
 	}
-
-	ROS_INFO("Faces images for %s saved. Calling the teach service of Qbo face recognition node.", person_name.c_str());
-	srv_teach.request.update_path = new_persons_path_;
+	
+	ROS_INFO("Faces images for %s saved. Calling the train service of Qbo face recognition node.", person_name.c_str());
+	srv_train.request.update_path = "";
 
 	speak_this("I am training myself");
-	if (client_teach.call(srv_teach))
+	if (client_train_.call(srv_train))
 	{
 		ROS_INFO("Learning DONE!");
 	}
 	else
 	{
-		ROS_ERROR("Failed to call service teach new face");
+		ROS_ERROR("Failed to call service train new face");
 		return false;
 	}
 
-
-
-
-
-	//Delete all folders in new persons path, so as to not repeat these images in the next learning phase
-	for (boost::filesystem::directory_iterator itr(new_persons_path_); itr!=boost::filesystem::directory_iterator(); ++itr)
-	{
-		if (boost::filesystem::is_directory(itr->status()))
-		{
-			std::string person_name=itr->path().filename().string();
-			boost::filesystem::remove_all(new_persons_path_+"/"+person_name);
-		}
-	}
 	return true;
 }
 
@@ -480,7 +403,8 @@ int main(int argc, char **argv)
 	 * Set service clients for face recognition
 	 */
 	client_get_name_ = private_nh_->serviceClient<qbo_face_msgs::GetName>("/qbo_face_recognition/get_name");
-	client_teach = private_nh_->serviceClient<qbo_face_msgs::Teach>("/qbo_face_recognition/teach");
+	client_train_ = private_nh_->serviceClient<qbo_face_msgs::Train>("/qbo_face_recognition/train");
+	client_learn_faces_ = private_nh_->serviceClient<qbo_face_msgs::LearnFaces>("/qbo_face_recognition/learn_faces");
 
 	/*
 	 * Set listener subscriber to listen to the respective topics
@@ -499,7 +423,6 @@ int main(int argc, char **argv)
 	/*
 	 * Set ROS parameters
 	 */
-	private_nh_->param<int>("/qbo_face_recognition_demo/num_images_to_hold", num_images_to_hold_, 20);
 	private_nh_->param<double>("/qbo_face_recognition_demo/wait_for_name_tolerance", wait_for_name_tolerance_, 4.0);
 
 	/*
@@ -514,7 +437,6 @@ int main(int argc, char **argv)
 //	speak_this("I am ready to recognize faces");
 	ros::spin();
 
-	private_nh_->deleteParam("/qbo_face_recognition_demo/num_images_to_hold");
 	private_nh_->deleteParam("/qbo_face_recognition_demo/wait_for_name_tolerance");
 
 	return 0;
