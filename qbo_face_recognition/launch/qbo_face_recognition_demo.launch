@@ -11,7 +11,7 @@
 	 <!-- <param name="/qbo_face_tracking/undetected_threshold" value="5.0" /> -->
 	 <!-- <param name="/qbo_face_tracking/distance_threshold" value="5.0" /> -->
 	 <param name="/qbo_face_tracking/send_to_recognizer" value="true" /> 
-	
+      <param name="/qbo_face_tracking/print_recognized_face" value="false" />	
 	
 	
 	<!-- Face Following node to move head -->
@@ -29,7 +29,7 @@
 	
 	
 	<!-- Face Recognition node to recognize faces -->
-	 <node name="qbo_face_recognition" pkg="qbo_face_recognition" type="qbo_face_recognition" output="screen">
+	 <node name="qbo_face_recognition" pkg="qbo_face_recognition" type="qbo_face_recognition">
  	 </node>
         <param name="/qbo_face_recognition/recognition_type" value="1" />
         <param name="/qbo_face_recognition/stabilizer_threshold" value="4" />
@@ -41,14 +41,10 @@
         <param name="/qbo_face_recognition/pca_dimension" value="40" />
         <param name="/qbo_face_recognition/pca_image_height" value="100" />
         <param name="/qbo_face_recognition/pca_image_width" value="100" />
-
 	
 	<!-- Face Recognition Demo to answer questions and to learn faces -->
 	<node name="qbo_face_recognition_demo" pkg="qbo_face_recognition" type="face_recognizer_demo" output="screen" >
 	 </node>
-	 <param name="/qbo_face_recognition_demo/num_images_to_hold" value="20" />
 	 <param name="/qbo_face_recognition_demo/wait_for_name_tolerance" value="4.0" />
 
-
-	 
 </launch>

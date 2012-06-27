@@ -47,7 +47,8 @@
 
 #include "qbo_face_msgs/RecognizeFace.h"
 #include "qbo_face_msgs/GetName.h"
-#include "qbo_face_msgs/Teach.h"
+#include "qbo_face_msgs/Train.h"
+#include "qbo_face_msgs/LearnFaces.h"
 
 #include "sensor_msgs/Image.h"
 
@@ -93,6 +94,10 @@ private:
 	int pca_dimension_;
 	cv::Size image_size_; //Image size of the faces in the PCA, in pixels
 
+	//Parameters of the learn_faces service
+	int num_images_to_hold_;
+	string face_topic_;
+	double max_time_to_learn; //max time to capture images. In seconds
 
 	/*
 	 * Vector of persons' images
@@ -118,6 +123,9 @@ private:
 	/* Variables for the stabilizer**/
 	std::vector<int> stabilizer_states_;
 
+	/* Faces' images vector used in the learn_faces service */
+	vector<cv::Mat> received_faces_;
+
 	/*
 	 * ROS Variables
 	 */
@@ -126,10 +134,11 @@ private:
 	ros::ServiceServer service2_;
 	ros::ServiceServer service3_;
 	ros::ServiceServer service4_;
-
+	ros::ServiceServer service5_;
 
 
 	/*Methods*/
+
 	/*
 	 * Set ROS parameters
 	 */
@@ -192,7 +201,7 @@ private:
 
 	void buildPCA();
 	string recognizePCA_SVM(cv::Mat img);
-	int teachPCA_Recognizer(string update_path = "");
+	int trainPCA_Recognizer(string update_path = "");
 
 
 	//For the Bags of Words Approach
@@ -229,7 +238,7 @@ private:
 	 *	objects's main path, add's it to the model, generate the vocabulary, retrain the classifiers.
 	 *	Return 0 if succeeded, and != 0 if not succeeded.
 	 */
-	int teachBOW_Recognizer(string update_path = "");
+	int trainBOW_Recognizer(string update_path = "");
 
 	/*
 	 * Loads the vocabulary.xml from objects_path and returns true. If file is not found, then
@@ -256,7 +265,9 @@ private:
 
 	bool getNameService(qbo_face_msgs::GetName::Request  &req, qbo_face_msgs::GetName::Response &res);
 
-	bool teachService(qbo_face_msgs::Teach::Request  &req, qbo_face_msgs::Teach::Response &res );
+	bool trainService(qbo_face_msgs::Train::Request  &req, qbo_face_msgs::Train::Response &res );
+
+	bool learnFaces(qbo_face_msgs::LearnFaces::Request  &req, qbo_face_msgs::LearnFaces::Response &res );
 
 
 	//Auxiliary functions to get SVM params
@@ -277,6 +288,16 @@ private:
 	 * Returns the number of descriptors added to the model. If <0, then an error has occurred
 	 */
 	int addDescriptorsToPerson(cv::Mat image, Person &person);
+
+
+	/*
+  	* Faces callback used to store the face's images in the learn_faces service
+  	*/
+ 	void faceImageCallback(const sensor_msgs::Image::ConstPtr& image_ptr);
+
+
+
+
 
 public:
 

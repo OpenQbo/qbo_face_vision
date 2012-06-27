@@ -94,6 +94,9 @@ void FaceDetector::setROSParams()
 
 	//If true, the messages will be sent to face recognizer to try to recognize the person, and the name will be seen in the viewer
 	private_nh_.param("/qbo_face_tracking/send_to_recognizer", send_to_face_recognizer_, false);
+	
+	//If true, this parameter will print the recognized person in the viewer. Note: only applicable when send_to_recognizer is set as true 
+	private_nh_.param("/qbo_face_tracking/print_recognized_face", print_recognized_face_, true);
 
 }
 
@@ -108,6 +111,7 @@ void FaceDetector::deleteROSParams()
 	private_nh_.deleteParam("/qbo_face_tracking/undetected_threshold");
 	private_nh_.deleteParam("/qbo_face_tracking/distance_threshold");
 	private_nh_.deleteParam("/qbo_face_tracking/send_to_recognizer");
+	private_nh_.deleteParam("/qbo_face_tracking/print_recognized_face");
 }
 
 void FaceDetector::onInit()
@@ -462,7 +466,8 @@ void FaceDetector::imageCallback(const sensor_msgs::Image::ConstPtr& image_ptr)
     }
 
     //Draw name of person in image
-    cv::putText(image_received, name_detected_, cv::Point(40,40), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0,0,255), 3);
+	if(print_recognized_face_) 
+		cv::putText(image_received, name_detected_, cv::Point(40,40), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0,0,255), 3);
 
     
     /*
@@ -650,8 +655,6 @@ unsigned int FaceDetector::detectFaceCamShift(cv::Mat img)
 	unsigned int max_distance_width = detected_face_roi_.width/3.;
 	unsigned int max_distance_height = detected_face_roi_.height/3.;
 
-	bool track_object = false;
-
 	/*********************/
 
 
@@ -689,7 +692,6 @@ unsigned int FaceDetector::detectFaceCamShift(cv::Mat img)
 		hist.convertTo(hist,hist.type(),scale,0);
 		track_window = face_roi;
 		histimg.setTo(0);
-		track_object = true;
 	}
 
 
@@ -742,7 +744,6 @@ unsigned int FaceDetector::detectFaceCamShift(cv::Mat img)
 	if(mean_score<mean_score_threshold) //Let's see if CAM Shift respects mean score threshold
 	{
 		face_detected_bool_ = false;
-		track_object = false;
 		return 1;
 	}
 
@@ -751,7 +752,6 @@ unsigned int FaceDetector::detectFaceCamShift(cv::Mat img)
 			cv::Point2f(detected_face_roi_.x+detected_face_roi_.width/2,detected_face_roi_.y+detected_face_roi_.height/2.)) > max_face_deslocation)
 	{
 		face_detected_bool_ = false;
-		track_object = false;
 
 		return 1;
 	}
