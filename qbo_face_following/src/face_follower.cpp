@@ -355,6 +355,16 @@ void FaceFollower::setHeadPositionToFace(float pos_updown, float pos_leftright, 
 
 void FaceFollower::setHeadPositionGlobal(float pos_updown, float pos_leftright, float vel_updown, float vel_leftright)
 {
+    if(pos_leftright<0)
+        pos_leftright=-1.5;
+    else if(pos_leftright>0)
+        pos_leftright=1.5;
+/*
+    if(pos_updown<0)
+        pos_updown=-1.5;
+    else if(pos_updown>0)
+        pos_updown=1.5;
+*/
 	if(vel_leftright<0)
 		vel_leftright=-vel_leftright;
 	if(vel_updown<0)
