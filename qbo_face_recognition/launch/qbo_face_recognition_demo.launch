@@ -29,7 +29,7 @@
 	
 	
 	<!-- Face Recognition node to recognize faces -->
-	 <node name="qbo_face_recognition" pkg="qbo_face_recognition" type="qbo_face_recognition">
+	 <node name="qbo_face_recognition" pkg="qbo_face_recognition" type="qbo_face_recognition" output="screen">
  	 </node>
         <param name="/qbo_face_recognition/recognition_type" value="1" />
         <param name="/qbo_face_recognition/stabilizer_threshold" value="4" />
