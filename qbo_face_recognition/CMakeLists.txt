@@ -31,9 +31,7 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 rosbuild_add_executable(qbo_face_recognition src/face_recognizer.cpp src/person.cpp)
 rosbuild_add_executable(face_recognizer_demo src/face_recognizer_demo.cpp)
-rosbuild_add_executable(face_recognizer_webPro src/face_recognizer_webPro.cpp)
 
 
 target_link_libraries(qbo_face_recognition libboost_filesystem.so libboost_system.so)
 target_link_libraries(face_recognizer_demo libboost_filesystem.so libboost_system.so)
-target_link_libraries(face_recognizer_webPro libboost_filesystem.so libboost_system.so)
