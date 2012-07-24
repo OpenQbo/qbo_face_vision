@@ -36,4 +36,4 @@ rosbuild_add_executable(face_recognizer_demo_lang src/face_recognizer_demo_lang.
 
 target_link_libraries(qbo_face_recognition libboost_filesystem.so libboost_system.so)
 target_link_libraries(face_recognizer_demo libboost_filesystem.so libboost_system.so)
-target_link_libraries(face_recognizer_demo_lang libboost_filesystem.so libboost_system.so)
+target_link_libraries(face_recognizer_demo_lang libboost_filesystem.so libboost_system.so libboost_regex.so)
