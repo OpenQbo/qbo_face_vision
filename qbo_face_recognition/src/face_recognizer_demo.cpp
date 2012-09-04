@@ -26,6 +26,10 @@
 #include <cmath>
 #include <sstream>
 #include <string>
+#include <map> 
+#include <fstream>
+#include <boost/regex.hpp>
+#include <boost/algorithm/string/regex.hpp>
 
 #include <cv.h>
 #include <highgui.h>
@@ -35,6 +39,7 @@
 #include <cxcore.h>
 
 #include <ros/ros.h>
+#include <ros/package.h>
 
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/Image.h>
@@ -55,15 +60,13 @@
 #include <boost/algorithm/string.hpp>
 #include "boost/filesystem.hpp"   // includes all needed Boost.Filesystem declarations
 
+using namespace std;
 
-using std::string;
-using std::vector;
-using std::stringstream;
-using std::endl;
+map<string, string> dictionary;
 
 ros::NodeHandle * private_nh_;
 ros::Subscriber listener_sub;
-ros::Subscriber listener_sub_2;
+ros::Subscriber system_lang_sub;
 ros::Subscriber image_sub_;
 ros::Subscriber face_pos_sub_ ;
 ros::ServiceClient client_talker;
@@ -91,6 +94,55 @@ string name_to_learn_ = "";
 
 bool face_detected_ = false; /*Bool and indicates if a face hasn't been detected so as to ingnore listening */
 
+void listenerCallback(const qbo_listen::ListenedConstPtr& msg);
+
+/*
+* Method that loads dictionary from a txt file into the map structure. It receives the language to be loaded
+*/
+int loadDictionary(string lang)
+{
+	string filename = ros::package::getPath("qbo_face_recognition") + "/config/lang/"+lang+".txt";	
+
+	string line;
+	ifstream dict_file(filename.c_str());
+	if (dict_file.is_open())
+  	{
+   		while (dict_file.good())
+    		{
+     			getline (dict_file,line);
+			vector<string> words;
+			boost::split(words, line, boost::is_any_of("="));
+			if(words.size()>=2)
+			{
+				map<string, string>::iterator it = dictionary.find(words[0]);
+				if(it != dictionary.end())
+					dictionary[words[0]]=words[1];
+				else
+					dictionary.insert(make_pair(words[0], words[1]));
+			}
+	    	}	
+
+	    	dict_file.close();
+  	}
+	else 
+	{
+		ROS_ERROR("Unable to open dictionary file [%s]",lang.c_str()); 
+		return 1;
+	}
+
+	printf("Printing FULL DICTIONARY:\n");
+
+	map<string,string>::iterator it;
+	for(it=dictionary.begin(); it!=dictionary.end(); it++ )
+    	cout << it->first << " corresponds to " << it->second << endl;
+
+	string listener_topic = "/listen/"+lang+"_default";
+	listener_sub = private_nh_->subscribe<qbo_listen::Listened>(listener_topic.c_str(),20,&listenerCallback);
+
+	ROS_INFO("Subscribed to topic %s", listener_topic.c_str());
+
+	return 0;
+}
 
 /*
  * Method that, by receiving a string, makes the robot talk that string
@@ -106,6 +158,28 @@ void speak_this(string to_speak)
 }
 
 
+
+/*
+
+System Language callback
+*/
+
+void system_langCallback(const std_msgs::String::ConstPtr& language)
+{
+	string lang = language->data;
+	ROS_INFO("Changing language to [%s]", language->data.c_str());
+	
+	if(lang != "es" && lang!="en")
+	{
+		ROS_ERROR("INVALID LANGUAGE. ONLY ENGLISH AND SPANISH ARE AVAILABLE.");
+		return;
+	}
+	
+	ROS_INFO("Loaded dictionary for %s", lang.c_str());
+
+	loadDictionary(lang);
+}
+
 /*
 */
 void facePosCallback(const qbo_face_msgs::FacePosAndDist::ConstPtr& face_pos)
@@ -119,7 +193,6 @@ void facePosCallback(const qbo_face_msgs::FacePosAndDist::ConstPtr& face_pos)
 		face_detected_ = false;
 	}
 }
-
 
 /*
  * Get the name recognizer by Qbo's face recognizer
@@ -138,7 +211,7 @@ string getNameFromFaceRecognizer()
 		//Use the service
 		if (client_get_name_.call(srv_get_name_))
 		{
-			str_detected = (std::string)(srv_get_name_.response.name);
+			str_detected = (string)(srv_get_name_.response.name);
 			bool_detected = srv_get_name_.response.recognized;
 
 			if(bool_detected)
@@ -186,7 +259,7 @@ bool learnPerson(string person_name)
 	ROS_INFO("Faces images for %s saved. Calling the train service of Qbo face recognition node.", person_name.c_str());
 	srv_train.request.update_path = "";
 
-	speak_this("I am training myself");
+	speak_this(dictionary["I AM TRAINING MYSELF"]);
 	if (client_train_.call(srv_train))
 	{
 		ROS_INFO("Learning DONE!");
@@ -200,11 +273,10 @@ bool learnPerson(string person_name)
 	return true;
 }
 
-
 void listenerCallback(const qbo_listen::ListenedConstPtr& msg)
 {
 
-	std::string listened = msg->msg;
+	string listened = msg->msg;
 
 	ROS_INFO("Listened: %s", listened.c_str());
 
@@ -218,33 +290,22 @@ void listenerCallback(const qbo_listen::ListenedConstPtr& msg)
 
 	if(learn_request) //A name has been asked to be learned
 	{
-		if(string(listened) == "YES I DID") //Confirm the name
+		if(string(listened) == dictionary["YES I DID"]) //Confirm the name
 		{
-
-			//Unsubscribe to topic of listen
-			listener_sub.shutdown();
-			listener_sub_2.shutdown();
-
-			speak_this("OK "+name_to_learn_+ ". Let me see how you look");
+			speak_this(dictionary["OK"]+" "+name_to_learn_+ ". "+dictionary["LET ME SEE HOW YOU LOOK"]);
 
 			if(learnPerson(name_to_learn_))
-				speak_this("OK. I am Ready to recognize you");
+				speak_this(dictionary["OK. I AM READY TO RECOGNIZE YOU"]);
 			else
-				speak_this("Oh oh. Problem. I could not train myself");
+				speak_this(dictionary["OH OH. PROBLEM. I COULD NOT TRAIN MYSELF"]);
 
 			learn_request = false;
-
-			/*
-			 * Re-subscribe to topic of listening
-			 */
-		//	listener_sub = private_nh_->subscribe<qbo_listen::Listened>("/listen/en_face_recog",20,&listenerCallback);
-			listener_sub_2 = private_nh_->subscribe<qbo_listen::Listened>("/listen/en_default",20,&listenerCallback);
 
 		}
-		else if(string(listened) == "NO" || string(listened) == "NO I DID NOT")
+		else if(string(listened) == dictionary["NO I DID NOT"])
 		{
 			learn_request = false;
-			speak_this("If your name is not "+name_to_learn_+". What is your name?");
+			speak_this(dictionary["IF YOUR NAME IS NOT"]+" "+name_to_learn_+". "+dictionary["WHAT IS YOUR NAME?"]);
 			//cv::waitKey(5000);
 		}
 		else
@@ -254,134 +315,53 @@ void listenerCallback(const qbo_listen::ListenedConstPtr& msg)
 	/*
 	 * Query sentences
 	 */
-	if(string(listened) == "WHAT IS MY NAME" || string(listened) == "WHAT'S MY NAME")
+	if(string(listened) == dictionary["WHAT IS MY NAME"] || string(listened) == dictionary["WHAT'S MY NAME"])
 	{
 		string rec_name;
 		rec_name = getNameFromFaceRecognizer();
 
 		if(rec_name != "")
 			//speak_this("This is a "+recognized_person);
-			speak_this("Your name is "+rec_name);
+			speak_this(dictionary["YOUR NAME IS"]+" "+rec_name);
 		else
-			speak_this("Sorry but I don't know");
+			speak_this(dictionary["SORRY BUT I DON'T KNOW YOU"]);
 	}
-	else if(string(listened) == "HI CUBE O HOW ARE YOU")
+	
+	else if(string(listened) == dictionary["ARE YOU SURE"])
 	{
 		string rec_name;
 		rec_name = getNameFromFaceRecognizer();
 
 		if(rec_name != "")
-			//speak_this("This is a "+recognized_person);
-			speak_this("Hello "+rec_name+". I am fine thank you");
+			speak_this(dictionary["YES. I AM SURE. YOUR NAME IS"]+" "+rec_name);
 		else
-			speak_this("Hi. I am fine thank you");
-	}
-
-	else if(string(listened) == "HELLO CUBE E O" || string(listened) == "HELLO CUBE")
-	{
-		string rec_name;
-		rec_name = getNameFromFaceRecognizer();
-
-		if(rec_name != "")
-			speak_this("Hello "+rec_name+". How are you?");
-		else
-			speak_this("Hello. How are you?");
-	}
-
-	else if(string(listened) == "ARE YOU SURE")
-	{
-		string rec_name;
-		rec_name = getNameFromFaceRecognizer();
-
-		if(rec_name != "")
-			speak_this("Yes. I am sure. Your name is "+rec_name);
-		else
-			speak_this("Sorry but I am not sure.");
+			speak_this(dictionary["SORRY BUT I AM NOT SURE"]);
 	}
 
 	/*
-	 * Learning sentences
+	 * Learning faces
 	 */
 	else
 	{
-		vector<string> words;
-		boost::split(words, listened, boost::is_any_of(" "));
-		if(words.size()> 3 && words[0]=="MY" && words[1] == "NAME") //My name is #####
-		{	//Erase "MY NAME IS"
-			for(unsigned int i = 0; i<3;i++)
-			{
-				words.erase(words.begin());
-			}
+        	vector<string> words;
+       		boost::split_regex(words, listened, boost::regex(dictionary["MY NAME IS"]+" "));
 
-			string person_name;
-
-			for(unsigned int i = 0; i<words.size();i++)
-			{
-				person_name+=words[i];
-
-				if(i!=words.size()-1)
-					person_name+=" ";
-			}
-
-			if(person_name == "JUAN WHO")
-				person_name = "WHOANDHO";
-
-
-			speak_this("Did you say "+person_name+"?");
-			learn_request = true;
-			name_to_learn_ = person_name;
-		}
-		else if(words.size()> 2 && words[0]=="I" && words[1] == "AM") //I am #####
+		if(words.size()>=2 ) //My name is #####
 		{
-			//Erase I AM
-			for(unsigned int i = 0; i<2;i++)
-			{
-				words.erase(words.begin());
-			}
+			string person_name = words[1];
 
-
-			string person_name;
-
-			for(unsigned int i = 0; i<words.size();i++)
-			{
-				person_name+=words[i];
-
-				if(i!=words.size()-1)
-					person_name+=" ";
-			}
-
-			if(person_name == "JUAN WHO")
-				person_name = "WHOANDHO";
-
-			speak_this("Did you say "+person_name+"?");
+			speak_this(dictionary["DID YOU SAY"]+" "+person_name+"?");
 			learn_request = true;
 			name_to_learn_ = person_name;
 		}
 
-		//Hello Cube O My name is
-		else if(words.size()> 6 && words[0]=="HELLO" && words[1] == "CUBE" && words[3] == "MY")
+       		boost::split_regex(words, listened, boost::regex(dictionary["I AM"]+" "));
+			
+		if(words.size()>= 2) //I am #####
 		{
-			//Erase HELLO CUBE O MY NAME IS
-			for(unsigned int i = 0; i<6;i++)
-			{
-				words.erase(words.begin());
-			}
+			string person_name = words[1];
 
-
-			string person_name;
-
-			for(unsigned int i = 0; i<words.size();i++)
-			{
-				person_name+=words[i];
-
-				if(i!=words.size()-1)
-					person_name+=" ";
-			}
-
-			if(person_name == "JUAN WHO")
-				person_name = "WHOANDHO";
-
-			speak_this("Did you say "+person_name+"?");
+			speak_this(dictionary["DID YOU SAY"]+" "+person_name+"?");
 			learn_request = true;
 			name_to_learn_ = person_name;
 		}
@@ -394,6 +374,25 @@ int main(int argc, char **argv)
 
 	private_nh_ = new ros::NodeHandle;
 
+
+	string init_lang = "en";
+
+	if( private_nh_->getParam("/system_lang", init_lang))
+	{
+		ROS_INFO("System language loaded -> %s", init_lang.c_str());
+	}
+
+	/*
+	* Load dictionary
+	*/
+	loadDictionary(init_lang);
+
+	/*
+	* Subscribe to system languange topic 
+	*/
+	system_lang_sub= private_nh_->subscribe<std_msgs::String>("/system_lang",1,&system_langCallback);
+	
+
 	/*
 	 * Set service client for qbo talker
 	 */
@@ -405,12 +404,6 @@ int main(int argc, char **argv)
 	client_get_name_ = private_nh_->serviceClient<qbo_face_msgs::GetName>("/qbo_face_recognition/get_name");
 	client_train_ = private_nh_->serviceClient<qbo_face_msgs::Train>("/qbo_face_recognition/train");
 	client_learn_faces_ = private_nh_->serviceClient<qbo_face_msgs::LearnFaces>("/qbo_face_recognition/learn_faces");
-
-	/*
-	 * Set listener subscriber to listen to the respective topics
-	 */
-//	listener_sub = private_nh_->subscribe<qbo_listen::Listened>("/listen/en_face_recog",20,&listenerCallback);
-	listener_sub_2 = private_nh_->subscribe<qbo_listen::Listened>("/listen/en_default",20,&listenerCallback);
 
 
 	/*
@@ -434,7 +427,7 @@ int main(int argc, char **argv)
 		new_persons_path_ = "/opt/qbo/ros_stacks/qbo_apps/qbo_face_recognition/faces/new_faces";
 
 	ROS_INFO("Faced Recognition Demo Launched. Ready for incoming orders");
-//	speak_this("I am ready to recognize faces");
+	
 	ros::spin();
 
 	private_nh_->deleteParam("/qbo_face_recognition_demo/wait_for_name_tolerance");
