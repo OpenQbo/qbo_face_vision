@@ -69,10 +69,12 @@ void FaceDetector::setROSParams()
 {
 	//Setting default path of the Haar cascade classifier
 	string default_classifier_path = "/usr/share/OpenCV-2.3.1/haarcascades/haarcascade_frontalface_alt2.xml";
+        //string alternative_classifier_path = "/usr/share/OpenCV-2.3.1/haarcascades/haarcascade_profileface.xml";
+        string alternative_classifier_path = "none";
 
 	//Set default parameter for face classifier path
 	private_nh_.param("/qbo_face_tracking/face_classifier_path", face_classifier_path_, default_classifier_path);
-
+        private_nh_.param("/qbo_face_tracking/alternative_face_classifier_path", alternative_face_classifier_path_, alternative_classifier_path);
 	//default_pos refers to the head position when head is not found
 	private_nh_.param<double>("/qbo_face_tracking/default_pos_x", default_pos_.x, double(0));
 	private_nh_.param<double>("/qbo_face_tracking/default_pos_y", default_pos_.y, double(10));
@@ -104,6 +106,7 @@ void FaceDetector::setROSParams()
 void FaceDetector::deleteROSParams()
 {
 	private_nh_.deleteParam("/qbo_face_tracking/face_classifier_path");
+        private_nh_.deleteParam("/qbo_face_tracking/alternative_face_classifier_path");
 	private_nh_.deleteParam("/qbo_face_tracking/default_pos_x");
 	private_nh_.deleteParam("/qbo_face_tracking/default_pos_y");
 	private_nh_.deleteParam("/qbo_face_tracking/check_Haar");
@@ -121,7 +124,7 @@ void FaceDetector::onInit()
 	 */
 	setROSParams();
 
-
+	
 
 	if(!face_classifier_.load(face_classifier_path_))
 	{
@@ -135,6 +138,16 @@ void FaceDetector::onInit()
 		ROS_INFO("Haar cascade classifier successfully loaded from %s", face_classifier_path_.c_str());
 	}
 
+        if(!alternative_face_classifier_.load(alternative_face_classifier_path_))
+        {
+                ROS_ERROR("Error importing alternative face Haar cascade classifier from the specified path: %s", alternative_face_classifier_path_.c_str());
+                exist_alternative_=false;
+        }
+        else
+        {
+                ROS_INFO("Alternative Haar cascade classifier successfully loaded from %s", alternative_face_classifier_path_.c_str());
+                exist_alternative_=true;
+	}
 
 	/*
 	 * Subscribers of the node
@@ -303,6 +316,32 @@ void FaceDetector::imageCallback(const sensor_msgs::Image::ConstPtr& image_ptr)
 
 
     }
+
+
+
+    if(!face_detected_bool_ && exist_alternative_) //If face was not detected - use Haar Cascade
+    {
+        vector<cv::Rect> faces_roi;
+        detectFacesAltHaar(image_received, faces_roi);
+
+        if(faces_roi.size() > 0) //If Haar cascade classifier found a face
+        {
+                face_detected_bool_ = true;
+                track_object_ = false;
+
+                //Changed
+                detected_face_roi_ = faces_roi[0];
+                detected_face_ = cv_ptr->image(detected_face_roi_);
+
+                //Adjust face ratio because Haar Cascade always returns a square
+                face_ratio_ = 1.3*detected_face_roi_.height/detected_face_roi_.width;
+
+                detection_type = "HAAR";
+        }
+
+
+    }
+
 
 
 	/*
@@ -531,18 +570,18 @@ void FaceDetector::imageCallback(const sensor_msgs::Image::ConstPtr& image_ptr)
     if(face_detected_bool_)
     {
     	if(dynamic_check_haar_)
-    		ROS_INFO("FACE DETECTED -> Head Pos :(%d, %d), Head Distance: %lg, Dynamic check Haar: %u, Detection type: %s",
-    				(int)message.u, (int)message.v, head_distance, check_Haar_, detection_type.c_str());
+    		ROS_INFO("FACE DETECTED -> Head Pos :(%d, %d), Head Distance: %lg, Dynamic check Haar: %u, Det type: %s, Alt: %s",
+    				(int)message.u, (int)message.v, head_distance, check_Haar_, detection_type.c_str(), (exist_alternative_)?"true":"false");
     	else
-    		ROS_INFO("FACE DETECTED -> Head Pos :(%d, %d), Head Distance: %lg, Check Haar: %u, Detection type: %s",
-    				(int)message.u, (int)message.v, head_distance, check_Haar_, detection_type.c_str());
+    		ROS_INFO("FACE DETECTED -> Head Pos :(%d, %d), Head Distance: %lg, Check Haar: %u, Detection type: %s, Alt: %s",
+    				(int)message.u, (int)message.v, head_distance, check_Haar_, detection_type.c_str(), (exist_alternative_)?"true":"false");
     }
     else
     {
     	if(dynamic_check_haar_)
-    		ROS_INFO("NO FACE DETECTED. Using Haar Cascade Classifier to find one. Dynamic Check Haar: %u", check_Haar_);
+    		ROS_INFO("NO FACE DETECTED. Using Haar Cascade Classifier to find one. Dynamic Check Haar: %u, Alt: %s", check_Haar_, (exist_alternative_)?"true":"false");
     	else
-    		ROS_INFO("NO FACE DETECTED. Using Haar Cascade Classifier to find one. Check Haar: %u", check_Haar_);
+    		ROS_INFO("NO FACE DETECTED. Using Haar Cascade Classifier to find one. Check Haar: %u, Alt: %s", check_Haar_, (exist_alternative_)?"true":"false");
     }
     
 	/*
@@ -806,6 +845,12 @@ unsigned int FaceDetector::detectFacesHaar(cv::Mat image, std::vector<cv::Rect> 
 {
 	classifierDetect(image,faces,face_classifier_);
 	return faces.size();
+}
+
+unsigned int FaceDetector::detectFacesAltHaar(cv::Mat image, std::vector<cv::Rect> &faces)
+{
+        classifierDetect(image,faces,alternative_face_classifier_);
+        return faces.size();
 }
 
 float FaceDetector::calcDistanceToHead(cv::Mat& head, cv::KalmanFilter& kalman_filter)

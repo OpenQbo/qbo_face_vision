@@ -63,6 +63,7 @@ private:
 	 * ROS Parameters
 	 */
 	string face_classifier_path_;
+        string alternative_face_classifier_path_;
 	cv::Point2d default_pos_;
 	int check_Haar_;
 	int check_track_obj_;
@@ -117,10 +118,11 @@ private:
 	bool dynamic_check_haar_;
 	int cam_shift_detected_count_;
 	int cam_shift_undetected_count_;
-
+	bool exist_alternative_;
 
 
 	cv::CascadeClassifier face_classifier_;
+        cv::CascadeClassifier alternative_face_classifier_;
 	//Regarding FaceRecognizer
 
 
@@ -144,6 +146,7 @@ private:
 
 	//Face detection methods
 	unsigned int detectFacesHaar(cv::Mat image, std::vector<cv::Rect> &faces);
+        unsigned int detectFacesAltHaar(cv::Mat image, std::vector<cv::Rect> &faces);
 	unsigned int detectFaceCamShift(cv::Mat img);
 	void classifierDetect(cv::Mat image, std::vector<cv::Rect>& detections, cv::CascadeClassifier classifier, int flag= CV_HAAR_FIND_BIGGEST_OBJECT, cv::Size size=cv::Size());
 
