@@ -111,7 +111,7 @@ void FaceFollower::onInit()
 	diff_v_=0;
 	kp_v_=0.0050;
 	ki_v_=0;
-	kd_v_=0;
+	kd_v_=0.001;
 
 	//For base's linear movement
 	distance_act_=0;
@@ -215,7 +215,7 @@ void FaceFollower::facePositionCallback(const qbo_face_msgs::FacePosAndDistConst
 		tilt_vel=controlPID(v_act_,0,diff_v_,kp_v_,ki_v_,kd_v_);
 		v_prev_=v_act_;
 
-		//ROS_INFO("Moving head: pos(%lg, %lg) and vel(%lg, %lg)", v_act_,u_act_,tilt_vel,pan_vel);
+		ROS_INFO("Moving head: pos(%lg, %lg) and vel(%lg, %lg)", v_act_,u_act_,tilt_vel,pan_vel);
 
 		if(move_head_bool_)	
 			setHeadPositionToFace(v_act_,u_act_,tilt_vel,pan_vel);
@@ -283,7 +283,7 @@ void FaceFollower::facePositionCallback(const qbo_face_msgs::FacePosAndDistConst
 		float rand_pan = search_min_pan_+((search_max_pan_-search_min_pan_)/20.0) * double(rand()%20);
 
 
-		//ROS_INFO("Randomly moving head: pos(%lg, %lg) and vel(%lg, %lg)", rand_tilt, rand_pan, search_tilt_vel_, search_pan_vel_);
+		ROS_INFO("Randomly moving head: pos(%lg, %lg) and vel(%lg, %lg)", rand_tilt, rand_pan, search_tilt_vel_, search_pan_vel_);
 		
 		if(move_head_bool_)
 			setHeadPositionGlobal(rand_tilt, rand_pan, 0.3, 0.3);
@@ -303,7 +303,7 @@ void FaceFollower::setHeadPositionToFace(float pos_updown, float pos_leftright, 
 	if(p_.data == NULL)
 		return;
 
-	printf("Pos_left_right: %lg\n",pos_leftright);
+//	printf("Pos_left_right: %lg\n",pos_leftright);
 	
 	float pan_pos,tilt_pos;
 
@@ -313,13 +313,13 @@ void FaceFollower::setHeadPositionToFace(float pos_updown, float pos_leftright, 
 	pan_pos = atan2((pan_pos - p_.at<float>(0,2)),p_.at<float>(0,0));
 	tilt_pos = atan2((tilt_pos - p_.at<float>(1,2)),p_.at<float>(1,1));
 	
-	printf("Angle pos: %lg. Yaw from joint: %lg \n", pan_pos, yaw_from_joint_);
+//	printf("Angle pos: %lg. Yaw from joint: %lg \n", pan_pos, yaw_from_joint_);
 
 
 	pan_pos = yaw_from_joint_-pan_pos;
 	tilt_pos = tilt_pos + pitch_from_joint_;
 
-	printf("SUM: %lg\n", pan_pos);
+//	printf("SUM: %lg\n", pan_pos);
 	//printf("Yaw from joint: %lg\n", yaw_from_joint_);
 	//printf("Image width: %d\n", image_width_);
 	//printf("Image height: %d\n", image_height_);
@@ -331,6 +331,8 @@ void FaceFollower::setHeadPositionToFace(float pos_updown, float pos_leftright, 
 		vel_updown=-vel_updown;
 
 	
+
+	ROS_INFO("Moving head to face: pos(%lg, %lg) and vel(%lg, %lg)", tilt_pos, pan_pos, vel_updown, vel_leftright);
 	
 	sensor_msgs::JointState joint_state;
 	int servos_count=2;
@@ -343,7 +345,15 @@ void FaceFollower::setHeadPositionToFace(float pos_updown, float pos_leftright, 
 	joint_state.velocity[0]=vel_leftright;
 
 	joint_state.name[1]="head_tilt_joint";	//arriba-abajo
-	joint_state.position[1]=tilt_pos;
+
+	if(pos_updown>0)
+		joint_state.position[1]=1.5;
+	else
+		joint_state.position[1]=-1.5;
+
+
+//	joint_state.position[1]=tilt_pos;
+
 	joint_state.velocity[1]=vel_updown;
 
 	joint_state.header.stamp = ros::Time::now();
