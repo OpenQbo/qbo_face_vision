@@ -140,7 +140,7 @@ void FaceDetector::onInit()
 
         if(!alternative_face_classifier_.load(alternative_face_classifier_path_))
         {
-                ROS_ERROR("Error importing alternative face Haar cascade classifier from the specified path: %s", alternative_face_classifier_path_.c_str());
+                ROS_WARN("Error importing alternative face Haar cascade classifier from the specified path: %s", alternative_face_classifier_path_.c_str());
                 exist_alternative_=false;
         }
         else
