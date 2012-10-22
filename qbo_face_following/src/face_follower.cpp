@@ -101,9 +101,9 @@ void FaceFollower::onInit()
 	u_act_=0;
 	u_prev_=0;
 	diff_u_=0;
-	kp_u_=0.0066;
+	kp_u_=0.0045; //0.0066
 	ki_u_=0;
-	kd_u_=0;
+	kd_u_=0.001;
 
 	//For head's tilt movement
 	v_act_=0;
@@ -341,7 +341,13 @@ void FaceFollower::setHeadPositionToFace(float pos_updown, float pos_leftright, 
 	joint_state.velocity.resize(servos_count);
 
 	joint_state.name[0]="head_pan_joint";	//izquierda-derecha
-	joint_state.position[0]= pan_pos;
+
+	if(pos_leftright>0)
+		joint_state.position[0]=-1.7;
+	else
+		joint_state.position[0]=1.7;
+
+//	joint_state.position[0]= pan_pos;
 	joint_state.velocity[0]=vel_leftright;
 
 	joint_state.name[1]="head_tilt_joint";	//arriba-abajo
