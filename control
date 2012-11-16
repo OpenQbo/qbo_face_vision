@@ -1,6 +1,6 @@
 Package: qboros-electric-qbo-face-vision
 Source: qboros-electric-qbo-face-vision
-Version: 1.0-openqbo0
+Version: 1.1-openqbo0
 Priority: standard
 Architecture: amd64
 Section: OpenQbo

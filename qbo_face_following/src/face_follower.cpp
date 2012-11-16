@@ -101,7 +101,7 @@ void FaceFollower::onInit()
 	u_act_=0;
 	u_prev_=0;
 	diff_u_=0;
-	kp_u_=0.0045; //0.0066
+	kp_u_=0.0040; //0.0066
 	ki_u_=0;
 	kd_u_=0.001;
 
@@ -109,7 +109,7 @@ void FaceFollower::onInit()
 	v_act_=0;
 	v_prev_=0;
 	diff_v_=0;
-	kp_v_=0.0050;
+	kp_v_=0.0040;
 	ki_v_=0;
 	kd_v_=0.001;
 
